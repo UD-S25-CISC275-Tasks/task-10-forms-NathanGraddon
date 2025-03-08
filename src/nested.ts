@@ -1,12 +1,15 @@
 import { Answer } from "./interfaces/answer";
 import { Question, QuestionType } from "./interfaces/question";
+import { duplicateQuestion, makeBlankQuestion } from "./objects";
 
 /**
  * Consumes an array of questions and returns a new array with only the questions
  * that are `published`.
  */
 export function getPublishedQuestions(questions: Question[]): Question[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const copyQue = deepCopy.filter((pub: Question): boolean => pub.published);
+    return copyQue;
 }
 
 /**
@@ -15,7 +18,12 @@ export function getPublishedQuestions(questions: Question[]): Question[] {
  * `expected`, and an empty array for its `options`.
  */
 export function getNonEmptyQuestions(questions: Question[]): Question[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const copyQue = deepCopy.filter(
+        (x: Question): boolean =>
+            x.body !== "" || x.expected !== "" || x.options.length !== 0,
+    );
+    return copyQue;
 }
 
 /***
@@ -24,9 +32,14 @@ export function getNonEmptyQuestions(questions: Question[]): Question[] {
  */
 export function findQuestion(
     questions: Question[],
-    id: number
+    id: number,
 ): Question | null {
-    return null;
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const theQuestion = deepCopy.find((x: Question): boolean => x.id === id);
+    if (!theQuestion) {
+        return null;
+    }
+    return theQuestion;
 }
 
 /**
@@ -34,7 +47,9 @@ export function findQuestion(
  * with the given `id`.
  */
 export function removeQuestion(questions: Question[], id: number): Question[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const remove = deepCopy.filter((x: Question): boolean => x.id !== id);
+    return remove;
 }
 
 /***
@@ -42,21 +57,29 @@ export function removeQuestion(questions: Question[], id: number): Question[] {
  * questions, as an array.
  */
 export function getNames(questions: Question[]): string[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const justNames = deepCopy.map((x: Question): string => x.name);
+    return justNames;
 }
 
 /***
  * Consumes an array of questions and returns the sum total of all their points added together.
  */
 export function sumPoints(questions: Question[]): number {
-    return 0;
+    let total: number = 0;
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    deepCopy.map((x: Question) => (total += x.points));
+    return total;
 }
 
 /***
  * Consumes an array of questions and returns the sum total of the PUBLISHED questions.
  */
 export function sumPublishedPoints(questions: Question[]): number {
-    return 0;
+    let count: number = 0;
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    deepCopy.map((x: Question) => (x.published ? (count += x.points) : count));
+    return count;
 }
 
 /***
@@ -77,7 +100,20 @@ id,name,options,points,published
  * Check the unit tests for more examples!
  */
 export function toCSV(questions: Question[]): string {
-    return "";
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const toStr = deepCopy.map(
+        (x: Question) =>
+            x.id +
+            "," +
+            x.name +
+            "," +
+            x.options.length +
+            "," +
+            x.points +
+            "," +
+            x.published,
+    );
+    return ["id,name,options,points,published", ...toStr].join("\n");
 }
 
 /**
@@ -86,7 +122,14 @@ export function toCSV(questions: Question[]): string {
  * making the `text` an empty string, and using false for both `submitted` and `correct`.
  */
 export function makeAnswers(questions: Question[]): Answer[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const answer = deepCopy.map((x: Question) => ({
+        questionId: x.id,
+        text: "",
+        submitted: false,
+        correct: false,
+    }));
+    return answer;
 }
 
 /***
@@ -94,7 +137,9 @@ export function makeAnswers(questions: Question[]): Answer[] {
  * each question is now published, regardless of its previous published status.
  */
 export function publishAll(questions: Question[]): Question[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const pub = deepCopy.map((x: Question) => ({ ...x, published: true }));
+    return pub;
 }
 
 /***
@@ -102,6 +147,13 @@ export function publishAll(questions: Question[]): Question[] {
  * are the same type. They can be any type, as long as they are all the SAME type.
  */
 export function sameType(questions: Question[]): boolean {
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const sameType = deepCopy.filter(
+        (x: Question): boolean => deepCopy[0].type === x.type,
+    );
+    if (sameType.length === deepCopy.length) {
+        return true;
+    }
     return false;
 }
 
@@ -114,9 +166,11 @@ export function addNewQuestion(
     questions: Question[],
     id: number,
     name: string,
-    type: QuestionType
+    type: QuestionType,
 ): Question[] {
-    return [];
+    let deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    deepCopy = [...deepCopy, makeBlankQuestion(id, name, type)];
+    return deepCopy;
 }
 
 /***
@@ -127,9 +181,13 @@ export function addNewQuestion(
 export function renameQuestionById(
     questions: Question[],
     targetId: number,
-    newName: string
+    newName: string,
 ): Question[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    const newCopy = deepCopy.map((x: Question) =>
+        x.id === targetId ? { ...x, name: newName } : x,
+    );
+    return newCopy;
 }
 
 /***
@@ -142,9 +200,18 @@ export function renameQuestionById(
 export function changeQuestionTypeById(
     questions: Question[],
     targetId: number,
-    newQuestionType: QuestionType
+    newQuestionType: QuestionType,
 ): Question[] {
-    return [];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    let newCopy = deepCopy.map((x: Question) =>
+        x.id === targetId ? { ...x, type: newQuestionType } : x,
+    );
+    newCopy.map((x) =>
+        x.id === targetId && x.type !== "multiple_choice_question" ?
+            (x.options = [])
+        :   x,
+    );
+    return newCopy;
 }
 
 /**
@@ -161,9 +228,20 @@ export function editOption(
     questions: Question[],
     targetId: number,
     targetOptionIndex: number,
-    newOption: string
-) {
-    return [];
+    newOption: string,
+): Question[] {
+    return questions.map((question) => {
+        if (question.id !== targetId) {
+            return question;
+        }
+        let update = [...question.options];
+        if (targetOptionIndex === -1) {
+            update = [...question.options, newOption];
+        } else {
+            update[targetOptionIndex] = newOption;
+        }
+        return { ...question, options: update };
+    });
 }
 
 /***
@@ -175,7 +253,15 @@ export function editOption(
 export function duplicateQuestionInArray(
     questions: Question[],
     targetId: number,
-    newId: number
+    newId: number,
 ): Question[] {
-    return [];
+    let duplicate: Question = questions[0];
+    const deepCopy = questions.map((x: Question): Question => ({ ...x }));
+    deepCopy.map((x: Question) => (x.id === targetId ? (duplicate = x) : x));
+    deepCopy.splice(
+        deepCopy.indexOf(duplicate) + 1,
+        0,
+        duplicateQuestion(newId, duplicate),
+    );
+    return deepCopy;
 }
